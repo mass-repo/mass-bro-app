@@ -161,7 +161,6 @@
     </div>
 
     <script>
-        // Инициализация при загрузке
         window.onload = function() {
             const savedWeight = localStorage.getItem('mass_bro_weight');
             if (savedWeight) {
@@ -202,7 +201,6 @@
             const foodList = document.getElementById('food-list');
             foodList.innerHTML += `<div class="food-item"><span>${name}</span><b>${kcal} ккал</b></div>`;
             
-            // Пересчет общего итога
             let total = 0;
             document.querySelectorAll('.food-item b').forEach(el => {
                 total += parseInt(el.innerText) || 0;
@@ -244,9 +242,9 @@
                 return "Гречка, рис, куриная грудка, яйца и творог — это база для набора качественного мяса. Не забывай про профицит калорий!";
             } else if(lower.includes('сон') || lower.includes('спать') || lower.includes('отдых')) {
                 return "Мышцы растут не в зале, а во сне. Спи минимум 8 часов, иначе кортизол сожрет весь твой прогресс.";
-            } else if(lower.includes('боль') || lower.includes 'сустав' || lower.includes('травм')) {
+            } else if(lower.includes('боль') || lower.includes('сустав') || lower.includes('травм')) {
                 return "Если сустав ноет — сбавь рабочий вес на 20%, убери травмоопасные амплитуды и дай связкам восстановиться. Здоровье превыше всего.";
-            } else if(lower.includes('креатин') ||lower.includes('протеин') || lower.includes('гейнер')) {
+            } else if(lower.includes('креатин') || lower.includes('протеин') || lower.includes('гейнер')) {
                 return "Креатин моногидрат — рабочая тема для силы и объема, пей по 5г в день. Протеин и гейнер — это просто еда в порошке, добирай ими суточный белок.";
             } else if(lower.includes('вес') || lower.includes('масс') || lower.includes('худой')) {
                 return "Чтобы масса шла вверх, вес на весах каждую неделю должен расти хотя бы на 200–300 грамм. Если стоит на месте — докинь еще порцию углеводов в рацион!";
