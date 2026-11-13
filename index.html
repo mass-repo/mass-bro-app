@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MASS BRO — Карманный Тренер</title>
+    <style>
+        :root {
+            --bg-color: #0f1115;
+            --card-bg: #1a1d24;
+            --accent: #f59e0b;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg-color); color: var(--text-main); padding-bottom: 80px; }
+        .header { background: var(--card-bg); padding: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d3748; }
+        .header h1 { font-size: 18px; color: var(--accent); }
+        .container { padding: 16px; max-width: 600px; margin: 0 auto; }
+        .card { background: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid #2d3748; }
+        .card h3 { margin-bottom: 12px; font-size: 16px; color: var(--text-main); }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; background: #252830; border: 1px solid #374151; border-radius: 8px; color: white; font-size: 14px; }
+        .btn { background: var(--accent); color: #000; font-weight: bold; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 8px; }
+        .btn:active { opacity: 0.8; }
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); display: flex; border-top: 1px solid #2d3748; padding: 8px 0; z-index: 100; }
+        .nav-item { flex: 1; text-align: center; color: var(--text-muted); font-size: 12px; cursor: pointer; padding: 6px 0; }
+        .nav-item.active { color: var(--accent); font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .chat-box { height: 280px; overflow-y: auto; background: #121418; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .msg { padding: 10px 14px; border-radius: 10px; max-width: 85%; font-size: 14px; line-height: 1.4; }
+        .msg.user { background: #3b82f6; color: white; align-self: flex-end; }
+        .msg.ai { background: #252830; color: var(--text-main); align-self: flex-start; }
+        .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+        .stat-card { background: #252830; padding: 12px; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 18px; font-weight: bold; color: var(--accent); margin-top: 4px; }
+        .exercise-row { display: flex; justify-content: space-between; align-items: center; background: #252830; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MASS BRO 🏋️‍♂️</h1>
+        <span id="user-weight-badge" style="font-size: 13px; color: var(--text-muted);">Вес: 73 кг</span>
+    </div>
+
+    <div class="container">
+        <!-- TAB 1: KBU -->
+        <div id="tab-kbu" class="tab-content active">
+            <div class="card">
+                <h3>📊 Твоя норма на массу</h3>
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <label>Калории</label>
+                        <div class="stat-value" id="res-cal">3 050</div>
+                    </div>
+                    <div class="stat-card">
+                        <label>Белки</label>
+                        <div class="stat-value" id="res-prot">160 г</div>
+                    </div>
+                    <div class="stat-card">
+                        <label>Углеводы</label>
+                        <div class="stat-value" id="res-carb">380 г</div>
+                    </div>
+                    <div class="stat-card">
+                        <label>Жиры</label>
+                        <div class="stat-value" id="res-fat">85 г</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>⚙️ Параметры тела</h3>
+                <div class="form-group">
+                    <label>Твой вес (кг)</label>
+                    <input type="number" id="input-weight" value="73" oninput="calculateKbu()">
+                </div>
+                <div class="form-group">
+                    <label>Цель</label>
+                    <select id="input-goal" onchange="calculateKbu()">
+                        <option value="bulking">Набор массы (+15% калорий)</option>
+                        <option value="lean">Сушка / Рекомпозиция</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🥣 Рацион под массу (База)</h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Гречка, рис, куриная грудка, яйца, творог, гейнер.</p>
+                <button class="btn" onclick="alert('Рацион на сегодня: Гречка 200г + Грудка 250г + 3 яйца + Гейнер!')">Сгенерировать меню</button>
+            </div>
+        </div>
+
+        <!-- TAB 2: Workouts -->
+        <div id="tab-workout" class="tab-content">
+            <div class="card">
+                <h3>🔥 Базовый сплит: День 1</h3>
+                <div class="exercise-row">
+                    <div>
+                        <strong>Жим лежа</strong>
+                        <div style="font-size: 12px; color: var(--text-muted);">4 подхода x 8 повторов</div>
+                    </div>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <input type="text" value="80 кг" style="width: 65px; padding: 6px; text-align: center; background: #121418; border: 1px solid #374151; color: white; border-radius: 6px;">
+                        <button onclick="addWeight(this)" style="background: var(--accent); border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">+2.5</button>
+                    </div>
+                </div>
+                <div class="exercise-row">
+                    <div>
+                        <strong>Жим гантелей под углом</strong>
+                        <div style="font-size: 12px; color: var(--text-muted);">3 подхода x 10 повторов</div>
+                    </div>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <input type="text" value="28 кг" style="width: 65px; padding: 6px; text-align: center; background: #121418; border: 1px solid #374151; color: white; border-radius: 6px;">
+                        <button onclick="addWeight(this)" style="background: var(--accent); border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">+2.5</button>
+                    </div>
+                </div>
+                <div class="exercise-row">
+                    <div>
+                        <strong>Подъем штанги на бицепс</strong>
+                        <div style="font-size: 12px; color: var(--text-muted);">3 подхода x 10 повторов</div>
+                    </div>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <input type="text" value="40 кг" style="width: 65px; padding: 6px; text-align: center; background: #121418; border: 1px solid #374151; color: white; border-radius: 6px;">
+                        <button onclick="addWeight(this)" style="background: var(--accent); border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">+2.5</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Bro-Chat -->
+        <div id="tab-chat" class="tab-content">
+            <div class="card" style="padding: 10px;">
+                <div class="chat-box" id="chat-messages">
+                    <div class="msg ai">Здорово, бро! Я твой ИИ-тренер. Спроси меня по тренировкам, технике или питанию на массе.</div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="chat-input" placeholder="Спроси тренера..." style="flex: 1; padding: 10px; background: #252830; border: 1px solid #374151; border-radius: 8px; color: white; font-size: 14px;">
+                    <button class="btn" style="margin-top: 0; width: 90px;" onclick="sendMessage()">Спросить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <div class="nav-item active" onclick="switchTab('kbu', this)">🍽 КБЖУ</div>
+        <div class="nav-item" onclick="switchTab('workout', this)">🏋️‍♂️ Тренировки</div>
+        <div class="nav-item" onclick="switchTab('chat', this)">🤖 Бро-Чат</div>
+    </div>
+
+    <script>
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            el.classList.add('active');
+        }
+
+        function calculateKbu() {
+            const w = parseFloat(document.getElementById('input-weight').value) || 73;
+            document.getElementById('user-weight-badge').innerText = 'Вес: ' + w + ' кг';
+            document.getElementById('res-cal').innerText = Math.round(w * 40 + 200);
+            document.getElementById('res-prot').innerText = Math.round(w * 2.2) + ' г';
+            document.getElementById('res-carb').innerText = Math.round(w * 5.2) + ' г';
+            document.getElementById('res-fat').innerText = Math.round(w * 1.1) + ' г';
+        }
+
+        function addWeight(btn) {
+            const input = btn.previousElementSibling;
+            let val = parseFloat(input.value) || 0;
+            val += 2.5;
+            input.value = val + ' кг';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const chatBox = document.getElementById('chat-messages');
+            chatBox.innerHTML += `<div class="msg user">${text}</div>`;
+            input.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            setTimeout(() => {
+                let reply = "Нормальная тема, бро! Главное — держи профицит калорий, спи и паши в зале до отказа.";
+                const lower = text.toLowerCase();
+                if(lower.includes('питание') || lower.includes('еда') || lower.includes('гречка')) {
+                    reply = "Гречка с куриной грудкой и яйцами — это база для набора мяса. Жри углеводы и закрывай белок!";
+                } else if(lower.includes('плеч') || lower.includes('боль')) {
+                    reply = "Если сустав ноет — сбавь вес на 20%, убери опасные углы и дай восстановиться. Не форсируй травму.";
+                }
+                chatBox.innerHTML += `<div class="msg ai">${reply}</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 600);
+        }
+    </script>
+</body>
+</html>ы
