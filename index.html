@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MASS BRO — Карманный Тренер</title>
+    <title>MASS BRO — ИИ Фитнес-Тренер</title>
     <style>
         :root {
             --bg-color: #0f1115;
@@ -47,7 +47,7 @@
     </div>
 
     <div class="container">
-        <!-- TAB 1: KBU & FOOD -->
+        <!-- TAB 1: KBU & API FOOD -->
         <div id="tab-kbu" class="tab-content active">
             <div class="card">
                 <h3>⚙️ Твои параметры</h3>
@@ -87,18 +87,20 @@
             </div>
 
             <div class="card">
-                <h3>🥣 Дневник питания (Добавь еду)</h3>
+                <h3>🔍 Поиск еды в базе Open Food Facts</h3>
                 <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                    <input type="text" id="food-name" placeholder="Напр: Гречка 200г + Грудка" style="flex: 2; padding: 8px; background: #252830; border: 1px solid #374151; border-radius: 6px; color: white; font-size: 13px;">
-                    <input type="number" id="food-kcal" placeholder="Ккал" style="flex: 1; padding: 8px; background: #252830; border: 1px solid #374151; border-radius: 6px; color: white; font-size: 13px;">
-                    <button class="btn" style="margin-top: 0; flex: 1; padding: 8px;" onclick="addFoodItem()">Добавить</button>
+                    <input type="text" id="food-search-input" placeholder="Напр: Творог, Гречка, Рис..." style="flex: 2; padding: 8px; background: #252830; border: 1px solid #374151; border-radius: 6px; color: white; font-size: 13px;" onkeypress="if(event.key === 'Enter') searchOpenFoodApi()">
+                    <button class="btn" style="margin-top: 0; flex: 1; padding: 8px;" onclick="searchOpenFoodApi()">Найти</button>
                 </div>
+                <div id="api-food-results" style="margin-bottom: 12px;"></div>
+                
+                <h4 style="font-size: 14px; margin-bottom: 8px; color: var(--text-muted);">Съедено за сегодня:</h4>
                 <div id="food-list">
                     <div class="food-item"><span>Гречка запаренная (200г)</span><b>300 ккал</b></div>
                     <div class="food-item"><span>Куриная грудка (250г)</span><b>275 ккал</b></div>
                 </div>
                 <div style="margin-top: 10px; font-size: 13px; color: var(--accent); text-align: right;">
-                    Итого съедено: <span id="total-eaten">575</span> ккал
+                    Итого: <span id="total-eaten">575</span> ккал
                 </div>
             </div>
         </div>
@@ -140,11 +142,11 @@
             </div>
         </div>
 
-        <!-- TAB 3: Bro-Chat -->
+        <!-- TAB 3: Smart AI Chat -->
         <div id="tab-chat" class="tab-content">
             <div class="card" style="padding: 10px;">
                 <div class="chat-box" id="chat-messages">
-                    <div class="msg ai">Здорово, бро! Я твой ИИ-тренер. Спроси меня про массу, питание, веса или технику. Я на связи!</div>
+                    <div class="msg ai">Здорово, бро! Я твой ИИ-тренер. Спрашивай за массу, калории, тренировки и восстановление. Я на связи!</div>
                 </div>
                 <div style="display: flex; gap: 8px;">
                     <input type="text" id="chat-input" placeholder="Спроси тренера..." style="flex: 1; padding: 10px; background: #252830; border: 1px solid #374151; border-radius: 8px; color: white; font-size: 14px;" onkeypress="if(event.key === 'Enter') sendMessage()">
@@ -190,25 +192,63 @@
             document.getElementById('res-fat').innerText = Math.round(w * 1.1) + ' г';
         }
 
-        function addFoodItem() {
-            const nameInput = document.getElementById('food-name');
-            const kcalInput = document.getElementById('food-kcal');
-            const name = nameInput.value.trim();
-            const kcal = parseInt(kcalInput.value) || 0;
+        // Open Food Facts API Integration
+        async function searchOpenFoodApi() {
+            const query = document.getElementById('food-search-input').value.trim();
+            const resultsBox = document.getElementById('api-food-results');
+            if(!query) return;
 
-            if (!name) return;
+            resultsBox.innerHTML = '<div style="color:var(--text-muted); font-size:13px; padding:6px;">Ищем в базе Open Food Facts...</div>';
+            
+            try {
+                const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if(!data.products || data.products.length === 0) {
+                    resultsBox.innerHTML = '<div style="color:#ef4444; font-size:13px; padding:6px;">Ничего не найдено. Попробуй другое слово.</div>';
+                    return;
+                }
+
+                let html = '';
+                data.products.slice(0, 4).forEach(p => {
+                    const name = p.product_name || p.product_name_ru || 'Продукт';
+                    const nutrients = p.nutriments || {};
+                    const kcal = Math.round(nutrients['energy-kcal_100g'] || nutrients['energy-kcal'] || 0);
+                    
+                    html += `<div class="food-item" style="cursor:pointer; margin-bottom:4px;" onclick="addSearchedFood('${name.replace(/'/g, "")}', ${kcal})">
+                        <span>${name.length > 30 ? name.substring(0, 30) + '...' : name}</span>
+                        <b>${kcal} ккал/100г ➕</b>
+                    </div>`;
+                });
+                resultsBox.innerHTML = html;
+            } catch(err) {
+                resultsBox.innerHTML = '<div style="color:#ef4444; font-size:13px; padding:6px;">Ошибка запроса к базе данных.</div>';
+            }
+        }
+
+        function addSearchedFood(name, kcal100) {
+            // Спросим сколько грамм съел (по умолчанию 100г)
+            let grams = prompt(`Сколько грамм продукта "${name}" ты съел?`, "100");
+            if (!grams) return;
+            grams = parseFloat(grams) || 100;
+            
+            const totalKcal = Math.round((kcal100 * grams) / 100);
 
             const foodList = document.getElementById('food-list');
-            foodList.innerHTML += `<div class="food-item"><span>${name}</span><b>${kcal} ккал</b></div>`;
+            foodList.innerHTML += `<div class="food-item"><span>${name} (${grams}г)</span><b>${totalKcal} ккал</b></div>`;
             
+            recalculateTotalFood();
+            document.getElementById('api-food-results').innerHTML = '';
+            document.getElementById('food-search-input').value = '';
+        }
+
+        function recalculateTotalFood() {
             let total = 0;
             document.querySelectorAll('.food-item b').forEach(el => {
                 total += parseInt(el.innerText) || 0;
             });
             document.getElementById('total-eaten').innerText = total;
-
-            nameInput.value = '';
-            kcalInput.value = '';
         }
 
         function addWeight(btn) {
@@ -218,6 +258,7 @@
             input.value = val + ' кг';
         }
 
+        // Smart AI Engine
         function sendMessage() {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
@@ -232,30 +273,32 @@
                 let reply = getSmartReply(text);
                 chatBox.innerHTML += `<div class="msg ai">${reply}</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
-            }, 500);
+            }, 400);
         }
 
         function getSmartReply(text) {
             const lower = text.toLowerCase();
+            const currentWeight = localStorage.getItem('mass_bro_weight') || '73';
             
-            if(lower.includes('питание') || lower.includes('еда') || lower.includes('гречк') || lower.includes('куриц')) {
-                return "Гречка, рис, куриная грудка, яйца и творог — это база для набора качественного мяса. Не забывай про профицит калорий!";
-            } else if(lower.includes('сон') || lower.includes('спать') || lower.includes('отдых')) {
-                return "Мышцы растут не в зале, а во сне. Спи минимум 8 часов, иначе кортизол сожрет весь твой прогресс.";
-            } else if(lower.includes('боль') || lower.includes('сустав') || lower.includes('травм')) {
-                return "Если сустав ноет — сбавь рабочий вес на 20%, убери травмоопасные амплитуды и дай связкам восстановиться. Здоровье превыше всего.";
-            } else if(lower.includes('креатин') || lower.includes('протеин') || lower.includes('гейнер')) {
-                return "Креатин моногидрат — рабочая тема для силы и объема, пей по 5г в день. Протеин и гейнер — это просто еда в порошке, добирай ими суточный белок.";
+            if(lower.includes('белк') || lower.includes('протеин')) {
+                let targetProt = Math.round(parseFloat(currentWeight) * 2.2);
+                return `При твоем весе в ${currentWeight} кг тебе нужно минимум ${targetProt} грамм белка в сутки для роста мышц. Налегай на грудку, творог, яйца и рыбу!`;
+            } else if(lower.includes('питание') || lower.includes('еда') || lower.includes('жрать')) {
+                return `Для качественного набора на твои ${currentWeight} кг держи профицит калорий. Медленные углеводы (рис, гречка) плюс качественный белок — залог массы.`;
+            } else if(lower.includes('сон') || lower.includes('спать')) {
+                return "Мышцы растут в кровати, а не в качалке. Меньше 8 часов сна — кортизол сожрет все результаты тренировок.";
+            } else if(lower.includes('сустав') || lower.includes('боль') || lower.includes('травм')) {
+                return "Если суставы начали ныть — сбавь веса на 20%, проверь технику и добавь омега-3 с коллагеном. Здоровье базы превыше всего.";
             } else if(lower.includes('вес') || lower.includes('масс') || lower.includes('худой')) {
-                return "Чтобы масса шла вверх, вес на весах каждую неделю должен расти хотя бы на 200–300 грамм. Если стоит на месте — докинь еще порцию углеводов в рацион!";
+                return `Смотри на весы каждую неделю: при весе ${currentWeight} кг ты должен прибавлять по 200–300г в неделю. Если вес встал — докинь еще порцию гарнира в рацион.`;
             } else {
-                const randomReplies = [
-                    "Нормальная тема, бро! Главное — паши в зале до отказа и держи профицит.",
-                    "Слушай своего тренера: тяжелые базовые упражнения, еда и сон — три кита массы.",
-                    "Не пропускай приемы пищи и тренируйся дисциплинировано. Результат придет!",
-                    "Если хочешь стать больше, ешь больше и жми усерднее. Никаких секретов, только база."
+                const variants = [
+                    `Четкая тема, бро! При твоем весе ${currentWeight} кг главное — стабильность в зале и тарелке.`,
+                    "Паши до отказа, ешь по графику и высыпайся. Других секретов в наборе массы нет.",
+                    "Слушай тренера: база, профицит и дисциплина сделают из тебя машину.",
+                    "Если хочешь расти — не жалей себя на тяжелых подходах и закрывай окна вовремя."
                 ];
-                return randomReplies[Math.floor(Math.random() * randomReplies.length)];
+                return variants[Math.floor(Math.random() * variants.length)];
             }
         }
     </script>
