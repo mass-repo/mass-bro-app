@@ -37,6 +37,7 @@
         .stat-card { background: #252830; padding: 12px; border-radius: 8px; text-align: center; }
         .stat-value { font-size: 18px; font-weight: bold; color: var(--accent); margin-top: 4px; }
         .exercise-row { display: flex; justify-content: space-between; align-items: center; background: #252830; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; }
+        .food-item { display: flex; justify-content: space-between; background: #252830; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 13px; align-items: center; }
     </style>
 </head>
 <body>
@@ -46,14 +47,29 @@
     </div>
 
     <div class="container">
-        <!-- TAB 1: KBU -->
+        <!-- TAB 1: KBU & FOOD -->
         <div id="tab-kbu" class="tab-content active">
             <div class="card">
-                <h3>📊 Твоя норма на массу</h3>
+                <h3>⚙️ Твои параметры</h3>
+                <div class="form-group">
+                    <label>Твой актуальный вес (кг)</label>
+                    <input type="number" id="input-weight" value="73" oninput="updateUserData()">
+                </div>
+                <div class="form-group">
+                    <label>Цель</label>
+                    <select id="input-goal" onchange="updateUserData()">
+                        <option value="bulking">Набор массы (Профицит)</option>
+                        <option value="lean">Поддержание / Рекомпозиция</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📊 Целевые КБЖУ в день</h3>
                 <div class="stat-grid">
                     <div class="stat-card">
                         <label>Калории</label>
-                        <div class="stat-value" id="res-cal">3 050</div>
+                        <div class="stat-value" id="res-cal">3050</div>
                     </div>
                     <div class="stat-card">
                         <label>Белки</label>
@@ -71,31 +87,26 @@
             </div>
 
             <div class="card">
-                <h3>⚙️ Параметры тела</h3>
-                <div class="form-group">
-                    <label>Твой вес (кг)</label>
-                    <input type="number" id="input-weight" value="73" oninput="calculateKbu()">
+                <h3>🥣 Дневник питания (Добавь еду)</h3>
+                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                    <input type="text" id="food-name" placeholder="Напр: Гречка 200г + Грудка" style="flex: 2; padding: 8px; background: #252830; border: 1px solid #374151; border-radius: 6px; color: white; font-size: 13px;">
+                    <input type="number" id="food-kcal" placeholder="Ккал" style="flex: 1; padding: 8px; background: #252830; border: 1px solid #374151; border-radius: 6px; color: white; font-size: 13px;">
+                    <button class="btn" style="margin-top: 0; flex: 1; padding: 8px;" onclick="addFoodItem()">Добавить</button>
                 </div>
-                <div class="form-group">
-                    <label>Цель</label>
-                    <select id="input-goal" onchange="calculateKbu()">
-                        <option value="bulking">Набор массы (+15% калорий)</option>
-                        <option value="lean">Сушка / Рекомпозиция</option>
-                    </select>
+                <div id="food-list">
+                    <div class="food-item"><span>Гречка запаренная (200г)</span><b>300 ккал</b></div>
+                    <div class="food-item"><span>Куриная грудка (250г)</span><b>275 ккал</b></div>
                 </div>
-            </div>
-
-            <div class="card">
-                <h3>🥣 Рацион под массу (База)</h3>
-                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Гречка, рис, куриная грудка, яйца, творог, гейнер.</p>
-                <button class="btn" onclick="alert('Рацион на сегодня: Гречка 200г + Грудка 250г + 3 яйца + Гейнер!')">Сгенерировать меню</button>
+                <div style="margin-top: 10px; font-size: 13px; color: var(--accent); text-align: right;">
+                    Итого съедено: <span id="total-eaten">575</span> ккал
+                </div>
             </div>
         </div>
 
         <!-- TAB 2: Workouts -->
         <div id="tab-workout" class="tab-content">
             <div class="card">
-                <h3>🔥 Базовый сплит: День 1</h3>
+                <h3>🔥 Базовый сплит: День 1 (Грудь / Бицепс)</h3>
                 <div class="exercise-row">
                     <div>
                         <strong>Жим лежа</strong>
@@ -133,10 +144,10 @@
         <div id="tab-chat" class="tab-content">
             <div class="card" style="padding: 10px;">
                 <div class="chat-box" id="chat-messages">
-                    <div class="msg ai">Здорово, бро! Я твой ИИ-тренер. Спроси меня по тренировкам, технике или питанию на массе.</div>
+                    <div class="msg ai">Здорово, бро! Я твой ИИ-тренер. Спроси меня про массу, питание, веса или технику. Я на связи!</div>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                    <input type="text" id="chat-input" placeholder="Спроси тренера..." style="flex: 1; padding: 10px; background: #252830; border: 1px solid #374151; border-radius: 8px; color: white; font-size: 14px;">
+                    <input type="text" id="chat-input" placeholder="Спроси тренера..." style="flex: 1; padding: 10px; background: #252830; border: 1px solid #374151; border-radius: 8px; color: white; font-size: 14px;" onkeypress="if(event.key === 'Enter') sendMessage()">
                     <button class="btn" style="margin-top: 0; width: 90px;" onclick="sendMessage()">Спросить</button>
                 </div>
             </div>
@@ -150,6 +161,15 @@
     </div>
 
     <script>
+        // Инициализация при загрузке
+        window.onload = function() {
+            const savedWeight = localStorage.getItem('mass_bro_weight');
+            if (savedWeight) {
+                document.getElementById('input-weight').value = savedWeight;
+            }
+            updateUserData();
+        }
+
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -157,13 +177,40 @@
             el.classList.add('active');
         }
 
-        function calculateKbu() {
+        function updateUserData() {
             const w = parseFloat(document.getElementById('input-weight').value) || 73;
+            localStorage.setItem('mass_bro_weight', w);
             document.getElementById('user-weight-badge').innerText = 'Вес: ' + w + ' кг';
-            document.getElementById('res-cal').innerText = Math.round(w * 40 + 200);
+            
+            const goal = document.getElementById('input-goal').value;
+            let multiplier = goal === 'bulking' ? 42 : 32;
+            
+            document.getElementById('res-cal').innerText = Math.round(w * multiplier);
             document.getElementById('res-prot').innerText = Math.round(w * 2.2) + ' г';
-            document.getElementById('res-carb').innerText = Math.round(w * 5.2) + ' г';
+            document.getElementById('res-carb').innerText = Math.round(w * 5.0) + ' г';
             document.getElementById('res-fat').innerText = Math.round(w * 1.1) + ' г';
+        }
+
+        function addFoodItem() {
+            const nameInput = document.getElementById('food-name');
+            const kcalInput = document.getElementById('food-kcal');
+            const name = nameInput.value.trim();
+            const kcal = parseInt(kcalInput.value) || 0;
+
+            if (!name) return;
+
+            const foodList = document.getElementById('food-list');
+            foodList.innerHTML += `<div class="food-item"><span>${name}</span><b>${kcal} ккал</b></div>`;
+            
+            // Пересчет общего итога
+            let total = 0;
+            document.querySelectorAll('.food-item b').forEach(el => {
+                total += parseInt(el.innerText) || 0;
+            });
+            document.getElementById('total-eaten').innerText = total;
+
+            nameInput.value = '';
+            kcalInput.value = '';
         }
 
         function addWeight(btn) {
@@ -184,17 +231,35 @@
             chatBox.scrollTop = chatBox.scrollHeight;
 
             setTimeout(() => {
-                let reply = "Нормальная тема, бро! Главное — держи профицит калорий, спи и паши в зале до отказа.";
-                const lower = text.toLowerCase();
-                if(lower.includes('питание') || lower.includes('еда') || lower.includes('гречка')) {
-                    reply = "Гречка с куриной грудкой и яйцами — это база для набора мяса. Жри углеводы и закрывай белок!";
-                } else if(lower.includes('плеч') || lower.includes('боль')) {
-                    reply = "Если сустав ноет — сбавь вес на 20%, убери опасные углы и дай восстановиться. Не форсируй травму.";
-                }
+                let reply = getSmartReply(text);
                 chatBox.innerHTML += `<div class="msg ai">${reply}</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
-            }, 600);
+            }, 500);
+        }
+
+        function getSmartReply(text) {
+            const lower = text.toLowerCase();
+            
+            if(lower.includes('питание') || lower.includes('еда') || lower.includes('гречк') || lower.includes('куриц')) {
+                return "Гречка, рис, куриная грудка, яйца и творог — это база для набора качественного мяса. Не забывай про профицит калорий!";
+            } else if(lower.includes('сон') || lower.includes('спать') || lower.includes('отдых')) {
+                return "Мышцы растут не в зале, а во сне. Спи минимум 8 часов, иначе кортизол сожрет весь твой прогресс.";
+            } else if(lower.includes('боль') || lower.includes 'сустав' || lower.includes('травм')) {
+                return "Если сустав ноет — сбавь рабочий вес на 20%, убери травмоопасные амплитуды и дай связкам восстановиться. Здоровье превыше всего.";
+            } else if(lower.includes('креатин') ||lower.includes('протеин') || lower.includes('гейнер')) {
+                return "Креатин моногидрат — рабочая тема для силы и объема, пей по 5г в день. Протеин и гейнер — это просто еда в порошке, добирай ими суточный белок.";
+            } else if(lower.includes('вес') || lower.includes('масс') || lower.includes('худой')) {
+                return "Чтобы масса шла вверх, вес на весах каждую неделю должен расти хотя бы на 200–300 грамм. Если стоит на месте — докинь еще порцию углеводов в рацион!";
+            } else {
+                const randomReplies = [
+                    "Нормальная тема, бро! Главное — паши в зале до отказа и держи профицит.",
+                    "Слушай своего тренера: тяжелые базовые упражнения, еда и сон — три кита массы.",
+                    "Не пропускай приемы пищи и тренируйся дисциплинировано. Результат придет!",
+                    "Если хочешь стать больше, ешь больше и жми усерднее. Никаких секретов, только база."
+                ];
+                return randomReplies[Math.floor(Math.random() * randomReplies.length)];
+            }
         }
     </script>
 </body>
-</html>ы
+</html>
